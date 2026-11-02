@@ -1,0 +1,62 @@
+name: taxi-challenge
+x-airflow: &airflow
+  build: .
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    TAXI_DATABASE_URL: postgresql://airflow:airflow@postgres/taxi
+    PYTHONPATH: /opt/airflow
+  volumes:
+    - airflow-logs:/opt/airflow/logs
+    - ./dags:/opt/airflow/dags:ro
+    - ./pipeline:/opt/airflow/pipeline:ro
+    - ./sql:/opt/airflow/sql:ro
+    - ../nyc-tlc-data:/opt/airflow/data:ro
+    - ./results:/opt/airflow/results
+    - ./tests:/opt/airflow/tests:ro
+  depends_on:
+    postgres:
+      condition: service_healthy
+  user: '${AIRFLOW_UID:-50000}:0'
+services:
+  postgres:
+    image: postgres:16.6
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-taxi.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U airflow -d airflow']
+      interval: 5s
+      retries: 20
+    ports:
+      - '127.0.0.1:5433:5432'
+  airflow-init:
+    <<: *airflow
+    command: >-
+      bash -c "airflow db migrate && python /opt/airflow/pipeline/init_user.py"
+  airflow-webserver:
+    <<: *airflow
+    command: webserver
+    ports:
+      - '127.0.0.1:8080:8080'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+  airflow-scheduler:
+    <<: *airflow
+    command: scheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+volumes:
+  postgres-data:
+  airflow-logs:

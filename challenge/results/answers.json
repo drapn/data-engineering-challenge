@@ -1,0 +1,40 @@
+{
+  "layer_counts": {
+    "source": 39656098,
+    "raw": 39656098,
+    "trusted": 39656098,
+    "refined": 39656098
+  },
+  "flagged_records": 13613,
+  "question_1": [
+    {
+      "total_records": 39656098
+    }
+  ],
+  "question_2": [
+    {
+      "trips_june_17": 123887
+    }
+  ],
+  "question_3": [
+    {
+      "pickup_day": "2022-10-28",
+      "pickup_at": "2022-10-28 05:19:00",
+      "dropoff_at": "2022-10-28 05:32:00",
+      "trip_distance": 389678.46
+    }
+  ],
+  "question_4": [
+    {
+      "mean": 5.959398968097261,
+      "stddev_population": 599.1907068230295,
+      "minimum": 0.0,
+      "maximum": 389678.46,
+      "quartiles": [
+        1.1,
+        1.9,
+        3.56
+      ]
+    }
+  ]
+}
